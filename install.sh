@@ -155,18 +155,22 @@ do_sabnzbd_install() {
 	###################
 	# SABnsbd Install #
     ###################
+    echo "Adding new user for SABnzbd"
 	useradd --system --user-group --no-create-home --groups ${usergroup} ${sab_username}
-	wget http://downloads.sourceforge.net/project/sabnzbdplus/sabnzbdplus/0.7.3/SABnzbd-0.7.3-src.tar.gz
+
+	echo "Downloading SABnzbd"
+	wget -q http://downloads.sourceforge.net/project/sabnzbdplus/sabnzbdplus/0.7.3/SABnzbd-0.7.3-src.tar.gz
+
+	echo "Extracting SABnzbd"
 	tar xzf SABnzbd-0.7.3-src.tar.gz
 	mv SABnzbd-0.7.3 ${sab_installpath}
 	chown -R ${sab_username}:${usergroup} ${sab_installpath}
 
+	echo "Creating SABnzbd data directories"
 	mkdir -p ${sab_datapath}
 	chown ${sab_username}:${usergroup} ${sab_datapath}
 
-	su ${sab_username} -c "/usr/local/sabnzbd/SABnzbd.py -d -f ${sab_config} -s ${ip}:${sab_port}"
-	get_sabnzbd_apikey
-
+	echo "Creating SABnzbd init script"
 	cat <<EOF > /etc/init.d/sabnzbd
 #!/bin/sh
 ### BEGIN INIT INFO
@@ -197,13 +201,13 @@ case "\$1" in
 		exit 1
 	esac
 EOF
-
 	chmod 755 /etc/init.d/sabnzbd
 	update-rc.d sabnzbd defaults
 
+	echo "Removing SABnzbd installation files"
 	rm SABnzbd*.tar.gz
 
-	# start and stop once to create required config files
+	echo "Starting and stopping once to create required config files"
 	/etc/init.d/sabnzbd start
 	/etc/init.d/sabnzbd stop
 }
@@ -242,9 +246,9 @@ case "\$1" in
 		echo "Stopping SickBeard."
 		p=\`ps aux | grep -v grep | grep SickBeard.py | tr -s \ | cut -d ' ' -f 2\`
 		if [ -n "\$p" ]; then
-			sb_api_key=`grep -m 1 api_key ${sb_config} | cut -d ' ' -f 3`;
-			sb_port=`grep -m 1 web_port ${sb_config} | cut -d ' ' -f 3`;
-			wget -q --delete-after http://localhost:${sb_port}/api/${sb_api_key}/\?cmd=sb.shutdown
+			sb_api_key=\`grep -m 1 api_key ${sb_config} | cut -d ' ' -f 3\`;
+			sb_port=\`grep -m 1 web_port ${sb_config} | cut -d ' ' -f 3\`;
+			wget -q --delete-after http://localhost:\${sb_port}/api/\${sb_api_key}/\?cmd=sb.shutdown
 			while ps -p \$p > /dev/null; do sleep 1; done
 		fi
 	;;
@@ -406,15 +410,31 @@ EOF
 
 do_sickbeard_setup() {
 	# ensure the API is enabled
-	if [ -n `grep -Fxq "use_api" ${sb_config}` ]; then
-		echo "Adding API configuration to Sickbeard"
-		sb_api_key=`< /dev/urandom tr -dc a-z0-9 | head -c\${1:-32};echo;`
-		sed -i "/\[General\]/ a\use_api = 1" ${sb_config}
-		sed -i "/\[General\]/ a\api_key = ${sb_api_key}" ${sb_config}
-	else
-		echo "API already enabled"
-		get_sickbeard_apikey
-	fi
+	echo "Adding API configuration to Sickbeard"
+	sb_api_key=`< /dev/urandom tr -dc a-z0-9 | head -c\${1:-32};echo;`
+	sed -i '/\[General\]/,/\[/s/web_username =.*/web_username = 1/' ${sb_config}
+	sed -i '/\[General\]/,/\[/s/api_key =.*/api_key = ${sb_api_key}/' ${sb_config}
+
+	echo "Setting web ui preferences"
+	sed -i '/\[General\]/,/\[/s/web_username =.*/web_username = ${web_username}/' ${sb_config}
+	sed -i '/\[General\]/,/\[/s/web_password =.*/web_password = ${web_password}/' ${sb_config}
+
+	echo "Setting SABnzbd integration preferences"
+	sed -i '/\[General\]/,/\[/s/move_associated_files =.*/move_associated_files = 1/' ${sb_config}
+	sed -i '/\[General\]/,/\[/s/keep_processed_dir =.*/keep_processed_dir = 0/' ${sb_config}
+	sed -i '/\[General\]/,/\[/s/nzb_method =.*/nzb_method = sabnzbd/' ${sb_config}
+	sed -i '/\[SABnzbd\]/,/\[/s/sab_host =.*/host = ${ip}:${sab_port}/' ${sb_config}
+	sed -i '/\[SABnzbd\]/,/\[/s/sab_apikey =.*/apikey = ${sab_api_key}/' ${sb_config}
+	sed -i '/\[SABnzbd\]/,/\[/s/sab_category =.*/category = tv/' ${sb_config}
+
+	echo "Setting NZBMatrix integration preferences"
+	sed -i '/\[NZBMatrix\]/,/\[/s/nzbmatrix =.*/nzbmatrix = 1/' ${sb_config}
+	sed -i '/\[NZBMatrix\]/,/\[/s/nzbmatrix_username =.*/nzbmatrix_username = ${nzbmatrix_username}/' ${sb_config}
+	sed -i '/\[NZBMatrix\]/,/\[/s/nzbmatrix_apikey =.*/nzbmatrix_apikey = ${nzbmatrix_api}/' ${sb_config}
+
+	echo "Setting XBMC integration preferences"
+	sed -i '/\[General\]/,/\[/s/use_banner =.*/use_banner = 1/' ${sb_config}
+	sed -i '/\[General\]/,/\[/s/metadata_xbmc =.*/metadata_xbmc = 1\|1\|1\|1\|1\|1/' ${sb_config}
 
 }
 
@@ -423,32 +443,33 @@ do_couchpotato_setup() {
 	echo "Configuring Couch Potato"
 
 	echo "Disabling auto-browser launch"
-	sed -i '/\[global\]/,/\[/s/launchbrowser =.*/launchbrowser = False/' ${couch_config}
+	sed -i "/\[global\]/,/\[/s/launchbrowser =.*/launchbrowser = False/" ${couch_config}
 
 	echo "Setting web ui preferences"
-	sed -i '/\[global\]/,/\[/s/port =.*/port = ${couch_port}/' ${couch_config}
-	sed -i '/\[global\]/,/\[/s/username =.*/username = ${web_username}/' ${couch_config}
-	sed -i '/\[global\]/,/\[/s/password =.*/password = ${web_password}/' ${couch_config}
+	sed -i "/\[global\]/,/\[/s/port =.*/port = ${couch_port}/" ${couch_config}
+	sed -i "/\[global\]/,/\[/s/username =.*/username = ${web_username}/" ${couch_config}
+	sed -i "/\[global\]/,/\[/s/password =.*/password = ${web_password}/" ${couch_config}
 
 	echo "Setting download preferences"
-	sed -i '/\[Renamer\]/,/\[/s/enabled =.*/enabled = True/' ${couch_config}
-	sed -i '/\[Renamer\]/,/\[/s/download =.*/download = ${media_root}\/sabnzbd\/complete\//' ${couch_config}
-	sed -i '/\[Renamer\]/,/\[/s/destination =.*/destination = ${media_root}\/films\//' ${couch_config}
-	sed -i '/\[Renamer\]/,/\[/s/cleanup =.*/cleanup = True/' ${couch_config}
+	replace=` echo "${media_root}" | sed -e 's/[\\/&]/\\\\&/g'`
+	sed -i "/\[Renamer\]/,/\[/s/enabled =.*/enabled = True/" ${couch_config}
+	sed -i "/\[Renamer\]/,/\[/s/download =.*/download = ${replace}\/sabnzbd\/complete\//" ${couch_config}
+	sed -i "/\[Renamer\]/,/\[/s/destination =.*/destination = ${replace}\/films\//" ${couch_config}
+	sed -i "/\[Renamer\]/,/\[/s/cleanup =.*/cleanup = True/" ${couch_config}
 
 	echo "Setting SABnzbd integration preferences"
 	get_sabnzbd_apikey
-	sed -i '/\[Sabnzbd\]/,/\[/s/host =.*/host = localhost:${sab_port}/' ${couch_config}
-	sed -i '/\[Sabnzbd\]/,/\[/s/apikey =.*/apikey = ${sab_api_key}/' ${couch_config}
-	sed -i '/\[Sabnzbd\]/,/\[/s/username =.*/username = ${web_username}/' ${couch_config}
-	sed -i '/\[Sabnzbd\]/,/\[/s/password =.*/password = ${web_password}/' ${couch_config}
-	sed -i '/\[Sabnzbd\]/,/\[/s/category =.*/category = films/' ${couch_config}
+	sed -i "/\[Sabnzbd\]/,/\[/s/host =.*/host = localhost:${sab_port}/" ${couch_config}
+	sed -i "/\[Sabnzbd\]/,/\[/s/apikey =.*/apikey = ${sab_api_key}/" ${couch_config}
+	sed -i "/\[Sabnzbd\]/,/\[/s/username =.*/username = ${web_username}/" ${couch_config}
+	sed -i "/\[Sabnzbd\]/,/\[/s/password =.*/password = ${web_password}/" ${couch_config}
+	sed -i "/\[Sabnzbd\]/,/\[/s/category =.*/category = films/" ${couch_config}
 
 	if [ "${nzbmatrix_enable}" -eq 1 ]; then
 		echo "Setting nzbmatrix preferences"
-		sed -i '/\[NZBMatrix\]/,/\[/s/enabled =.*/enabled = True/' ${couch_config}
-		sed -i '/\[NZBMatrix\]/,/\[/s/username =.*/username = ${nzbmatrix_username}/' ${couch_config}
-		sed -i '/\[NZBMatrix\]/,/\[/s/apikey =.*/apikey = ${nzbmatrix_api}/' ${couch_config}
+		sed -i "/\[NZBMatrix\]/,/\[/s/enabled =.*/enabled = True/" ${couch_config}
+		sed -i "/\[NZBMatrix\]/,/\[/s/username =.*/username = ${nzbmatrix_username}/" ${couch_config}
+		sed -i "/\[NZBMatrix\]/,/\[/s/apikey =.*/apikey = ${nzbmatrix_api}/" ${couch_config}
 	fi
 }
 
@@ -462,8 +483,8 @@ fi
 
 
 #do_setup
+#do_pre_install
 
-do_pre_install
 #do_sabnzbd_install
 #do_sickbeard_install
 #do_couchpotato_install

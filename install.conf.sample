@@ -8,8 +8,8 @@ pi_password={PASSWORD}
 web_username={USERNAME}
 web_password={PASSWORD}
 
-do_os_update=1
 expand_rootfs=1
+do_os_update=1
 do_firmware_update=1
 purge_x=1
 
