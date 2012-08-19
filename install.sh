@@ -12,20 +12,20 @@ ip=`ifconfig eth0 | grep "inet addr" | awk -F: '{print \$2}' | awk '{print \$1}'
 sab_api_key=unknown
 
 
-# Stages are
-# 1 Expand RootFS
-# 2 Core Setup (default)
-# 3 Package installation
-# 4 Package setup
 start_stage=2
-while getopts "s:" opt; do
+end_stage=99
+while getopts "s:e:" opt; do
 	case $opt in
 		s)
 			start_stage=$OPTARG
 			echo "Start stage set to $start_stage"
 			;;
+		e)
+			end_stage=$OPTARG
+			echo "End stage set to $end_stage"
+			;;
 		\?)
-			echo "invalid option"
+			echo "Invalid option"
 			exit 1
 			;;
 		esac
@@ -126,27 +126,51 @@ do_media_setup() {
 
 
 
-
 cd /tmp
-if [ $start_stage -leq 1 ]; then
+if (( ($start_stage -leq 1) && ($end_stage -geq 1) )); then
 	do_rpi_expand_rootfs
 fi
 
-if [ $start_stage -leq 2 ]; then
+if (( ($start_stage -leq 2) && ($end_stage -geq 2) )); then
 	do_rpi_setup
+fi
+
+if (( ($start_stage -leq 3) && ($end_stage -geq 3) )); then
 	do_pre_install
 fi
 
-if [ $start_stage -leq 3 ]; then
+if (( ($start_stage -leq 4) && ($end_stage -geq 4) )); then
 	do_sabnzbd_install
+fi
+
+if (( ($start_stage -leq 5) && ($end_stage -geq 5) )); then
 	do_sickbeard_install
+fi
+
+if (( ($start_stage -leq 6) && ($end_stage -geq 6) )); then
 	do_couchpotato_install
+fi
+
+if (( ($start_stage -leq 7) && ($end_stage -geq 7) )); then
 	do_headphones_install
 fi
 
-if [ $start_stage -leq 4 ]; then
+if (( ($start_stage -leq 8) && ($end_stage -geq 8) )); then
 	do_media_setup
+fi
+
+if (( ($start_stage -leq 9) && ($end_stage -geq 9) )); then
 	do_sabnzbd_setup
+fi
+
+if (( ($start_stage -leq 10) && ($end_stage -geq 10) )); then
 	do_sickbeard_setup
+fi
+
+if (( ($start_stage -leq 11) && ($end_stage -geq 11) )); then
 	do_couchpotato_setup
+fi
+
+if (( ($start_stage -leq 12) && ($end_stage -geq 12) )); then
+	do_headphones_setup
 fi
