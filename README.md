@@ -10,11 +10,18 @@ Usage
 
 Simply log onto your Raspberry Pi, either locally or using SSH, then follow these steps...
 
-1. Clone this repository
+
+1. Install git
+
+    > sudo apt-get update
+
+    > sudo apt-get -y install git
+
+2. Clone this repository
 
     > git clone git://github.com/Cylindric/rPiDownloader.git
 
-2. Copy the sample configuration file and edit it: (press [Ctrl]+[X], [Y], [Enter] to quit and save)
+3. Copy the sample configuration file and edit it: (press [Ctrl]+[X], [Y], [Enter] to quit and save)
 
     > cd rPiDownloader
 
@@ -22,6 +29,6 @@ Simply log onto your Raspberry Pi, either locally or using SSH, then follow thes
 
     > nano install.conf
 
-3. Run the installer
+4. Run the installer
 
     > sudo sh ./install.sh

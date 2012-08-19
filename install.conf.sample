@@ -12,19 +12,22 @@ expand_rootfs=1
 do_os_update=1
 do_firmware_update=1
 purge_x=1
+additional_packages=
 
 usergroup=nzb
 
-sab_username=sabnzbd
+media_root=/var/multimedia
+film_root=/var/multimedia/films
+tv_root=/var/multimedia/tv
+
 sab_port=8080
+sab_username=sabnzbd
 sab_installpath=/usr/local/sabnzbd
 sab_datapath=/var/sabnzbd
 sab_config=/var/sabnzbd/sabnzbd.ini
 sab_download_dir=/var/multimedia/incoming/sabnzbd/incomplete
 sab_complete_dir=/var/multimedia/incoming/sabnzbd/complete
 sab_script_dir=/usr/local/sickbeard/autoProcessTV
-sab_web_username=nzb
-sab_web_password=nzb
 
 sb_port=8081
 sb_username=sickbeard
@@ -38,15 +41,18 @@ couch_installpath=/usr/local/couchpotato
 couch_datapath=/var/couchpotato
 couch_config=/var/couchpotato/couchpotato.ini
 
-media_root=/var/multimedia
-
 nzbmatrix_enable=1
-snzbmatrix_username={USERNAME}
-nzbmatrix_api={APIKEY}
+nzbmatrix_username=
+nzbmatrix_api=
 
 nntp_server={SERVER_ADDRESS}
-nntp_username={USERNAME}
-nntp_password={PASSWORD}
+nntp_username=
+nntp_password=
 nntp_connections=50
 nntp_port=563
 nntp_ssl=1
+
+xbmc_enable=1
+xbmc_host=
+xmbc_username=
+xbmc_password=
