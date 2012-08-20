@@ -75,7 +75,7 @@ do_sabnzbd_setup() {
 	echo Shutting down to add non-api settings
 	/etc/init.d/sabnzbd stop
 
-	if [ "${nntp_server}" != "{SERVER_ADDRESS}"]; then
+	if [ "${nntp_server}" != "{SERVER_ADDRESS}" ]; then
 		cat <<EOF >> /var/sabnzbd/sabnzbd.ini
 [servers]
 [[${nntp_server}]]
@@ -136,13 +136,13 @@ EOF
 	wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=SetConfig\&section=misc\&keyword=complete_dir\&value=${sab_complete_dir}\&apikey=${sab_api_key}
 	wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=SetConfig\&section=misc\&keyword=script_dir\&value=${sab_script_dir}\&apikey=${sab_api_key}
 
-	if [ "${web_username}" != "{USERNAME}"]; then
+	if [ "${web_username}" != "{USERNAME}" ]; then
 		echo Setting web UI username and password
 		wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=SetConfig\&section=misc\&keyword=username\&value=${web_username}\&apikey=${sab_api_key}
 		wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=SetConfig\&section=misc\&keyword=password\&value=${web_password}\&apikey=${sab_api_key}
 	fi
 
-	if [ "${nzbmatrix_username}" != "{USERNAME}"]; then
+	if [ "${nzbmatrix_username}" != "{USERNAME}" ]; then
 		echo Setting NZBMatrix username and password
 		wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=SetConfig\&section=nzbmatrix\&keyword=username\&value=${nzbmatrix_username}\&apikey=${sab_api_key}
 		wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=SetConfig\&section=nzbmatrix\&keyword=apikey\&value=${nzbmatrix_api}\&apikey=${sab_api_key}

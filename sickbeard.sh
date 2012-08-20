@@ -56,7 +56,7 @@ EOF
 	# start and stop once to create required config files
 	# We have to just kill the process for now, because we don't have the API enabled yet
 	/etc/init.d/sickbeard start
-	p=\`ps aux | grep -v grep | grep SickBeard.py | tr -s \ | cut -d ' ' -f 2\`
+	p=`ps aux | grep -v grep | grep SickBeard.py | tr -s \ | cut -d ' ' -f 2`
 	kill -9 $p
 }
 

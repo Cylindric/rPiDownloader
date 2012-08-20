@@ -54,6 +54,7 @@ EOF
 	
 	# start and stop once to create required config files
 	/etc/init.d/couchpotato start
+	sleep 15
 	/etc/init.d/couchpotato stop
 }
 

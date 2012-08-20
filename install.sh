@@ -18,11 +18,9 @@ while getopts "s:e:" opt; do
 	case $opt in
 		s)
 			start_stage=$OPTARG
-			echo "Start stage set to $start_stage"
 			;;
 		e)
 			end_stage=$OPTARG
-			echo "End stage set to $end_stage"
 			;;
 		\?)
 			echo "Invalid option"
@@ -31,6 +29,11 @@ while getopts "s:e:" opt; do
 		esac
 done
 
+# Runime checks
+if [ "$(id -u)" != "0" ]; then
+	echo "This script must be run as root"
+	exit 1
+fi
 
 # Configuration checks
 config_ok=1
@@ -73,9 +76,16 @@ SetConfig() {
 
 
 
-
-
 do_pre_install() {
+	# Remove unwanted packages (Do this first - space is limited!)
+	if [ $purge_x -eq 1 ]; then
+		echo "Removing unwanted packages"
+		apt-get -qqy purge scratch xserver-common lxde-common lxinput lxappearance lxpanel lxpolkit lxrandr lxsession-edit lxshortcut lxtask lxterminal gnome-icon-theme gnome-themes-standard
+		rm -r /usr/lib/xorg/modules/linux /usr/lib/xorg/modules/extensions /usr/lib/xorg/modules /usr/lib/xorg
+		apt-get -qqy autoremove
+		apt-get -qqy autoclean
+	fi
+
 	# Install Packages
 	echo "deb-src http://mirrordirector.raspbian.org/raspbian/ wheezy main contrib non-free rpi" >> /etc/apt/sources.list
 	apt-get -q update
@@ -85,14 +95,6 @@ do_pre_install() {
 	dpkg -i unrar*.deb
 	rm -rf unrar*
 
-	# Remove unwanted packages
-	if [ $purge_x -eq 1 ]; then
-		echo "Removing unwanted packages"
-		apt-get -qqy purge scratch xserver-common lxde-common lxinput lxappearance lxpanel lxpolkit lxrandr lxsession-edit lxshortcut lxtask lxterminal gnome-icon-theme gnome-themes-standard
-		rm -r /usr/lib/xorg/modules/linux /usr/lib/xorg/modules/extensions /usr/lib/xorg/modules /usr/lib/xorg
-		apt-get -qqy autoremove
-		apt-get -qqy autoclean
-	fi
 	apt-get -qqy clean
 
 	# Add users and groups
@@ -127,50 +129,51 @@ do_media_setup() {
 
 
 cd /tmp
-if (( ($start_stage -leq 1) && ($end_stage -geq 1) )); then
+echo "Running stages $start_stage to $end_stage..."
+if [ $start_stage -le 1 -a $end_stage -ge 1 ]; then
 	do_rpi_expand_rootfs
 fi
 
-if (( ($start_stage -leq 2) && ($end_stage -geq 2) )); then
-	do_rpi_setup
-fi
-
-if (( ($start_stage -leq 3) && ($end_stage -geq 3) )); then
+if [ $start_stage -le 2 -a $end_stage -ge 2 ]; then
 	do_pre_install
 fi
 
-if (( ($start_stage -leq 4) && ($end_stage -geq 4) )); then
+if [ $start_stage -le 3 -a $end_stage -ge 3 ]; then
+	do_rpi_setup
+fi
+
+if [ $start_stage -le 4 -a $end_stage -ge 4 ]; then
 	do_sabnzbd_install
 fi
 
-if (( ($start_stage -leq 5) && ($end_stage -geq 5) )); then
+if [ $start_stage -le 5 -a $end_stage -ge 5 ]; then
 	do_sickbeard_install
 fi
 
-if (( ($start_stage -leq 6) && ($end_stage -geq 6) )); then
+if [ $start_stage -le 6 -a $end_stage -ge 6 ]; then
 	do_couchpotato_install
 fi
 
-if (( ($start_stage -leq 7) && ($end_stage -geq 7) )); then
+if [ $start_stage -le 7 -a $end_stage -ge 7 ]; then
 	do_headphones_install
 fi
 
-if (( ($start_stage -leq 8) && ($end_stage -geq 8) )); then
+if [ $start_stage -le 8 -a $end_stage -ge 8 ]; then
 	do_media_setup
 fi
 
-if (( ($start_stage -leq 9) && ($end_stage -geq 9) )); then
+if [ $start_stage -le 9 -a $end_stage -ge 9 ]; then
 	do_sabnzbd_setup
 fi
 
-if (( ($start_stage -leq 10) && ($end_stage -geq 10) )); then
+if [ $start_stage -le 10 -a $end_stage -ge 10 ]; then
 	do_sickbeard_setup
 fi
 
-if (( ($start_stage -leq 11) && ($end_stage -geq 11) )); then
+if [ $start_stage -le 11 -a $end_stage -ge 11 ]; then
 	do_couchpotato_setup
 fi
 
-if (( ($start_stage -leq 12) && ($end_stage -geq 12) )); then
+if [ $start_stage -le 12 -a $end_stage -ge 12 ]; then
 	do_headphones_setup
 fi

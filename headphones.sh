@@ -9,7 +9,7 @@ do_headphones_install() {
 	# Headphones Install #
     ######################
     echo "Adding new user for Headphones"
-	useradd --system --user-group --no-create-home --groups ${usergroup} ${sab_username}
+	useradd --system --user-group --no-create-home --groups ${usergroup} ${headphones_username}
 
 	echo "Downloading Headphones"
 	git clone git://github.com/rembo10/headphones.git
@@ -72,6 +72,7 @@ EOF
 
 	echo "Starting and stopping once to create required config files"
 	/etc/init.d/headphones start
+	sleep 15
 	/etc/init.d/headphones stop
 }
 
@@ -84,7 +85,7 @@ do_headphones_setup() {
 	SetConfig $headphones_config 'General' 'launch_browser' 0
 
 	echo "Setting web ui preferences"
-	SetConfig $headphones_config 'General' 'http_port' ${couch_port}
+	SetConfig $headphones_config 'General' 'http_port' ${headphones_port}
 	SetConfig $headphones_config 'General' 'http_username' "${web_username}"
 	SetConfig $headphones_config 'General' 'http_password' "${web_password}"
 
