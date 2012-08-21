@@ -21,8 +21,8 @@ do_sickbeard_install() {
 #!/bin/sh
 ### BEGIN INIT INFO
 # Provides:          SickBeard
-# Required-Start:    $network $remote_fs $syslog
-# Required-Stop:     $network $remote_fs $syslog
+# Required-Start:    \$network \$remote_fs \$syslog
+# Required-Stop:     \$network \$remote_fs \$syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Start SickBeard at boot time
@@ -47,6 +47,7 @@ case "\$1" in
 	*)
 		echo "Usage: \$0 {start|stop}"
 		exit 1
+	;;
 esac
 EOF
 
@@ -56,8 +57,7 @@ EOF
 	# start and stop once to create required config files
 	# We have to just kill the process for now, because we don't have the API enabled yet
 	/etc/init.d/sickbeard start
-	p=`ps aux | grep -v grep | grep SickBeard.py | tr -s \ | cut -d ' ' -f 2`
-	kill -9 $p
+	kill -9 `ps aux | grep -v grep | grep SickBeard.py | tr -s \ | cut -d ' ' -f 2`
 }
 
 
@@ -66,28 +66,39 @@ do_sickbeard_setup() {
 	# ensure the API is enabled
 	echo "Adding API configuration"
 	sb_api_key=`< /dev/urandom tr -dc a-z0-9 | head -c\${1:-32};echo;`
-	sed -i '/\[General\]/,/\[/s/api_enabled =.*/api_enabled = 1/' ${sb_config}
-	sed -i '/\[General\]/,/\[/s/api_key =.*/api_key = ${sb_api_key}/' ${sb_config}
+	sed -i "/\[General\]/,/\[/s/api_enabled =.*/api_enabled = 1/" ${sb_config}
+	sed -i "/\[General\]/,/\[/s/api_key =.*/api_key = ${sb_api_key}/" ${sb_config}
 
 	echo "Setting web ui preferences"
-	sed -i '/\[General\]/,/\[/s/web_username =.*/web_username = ${web_username}/' ${sb_config}
-	sed -i '/\[General\]/,/\[/s/web_password =.*/web_password = ${web_password}/' ${sb_config}
+	sed -i "/\[General\]/,/\[/s/web_username =.*/web_username = ${web_username}/" ${sb_config}
+	sed -i "/\[General\]/,/\[/s/web_password =.*/web_password = ${web_password}/" ${sb_config}
 
 	echo "Setting SABnzbd integration preferences"
-	sed -i '/\[General\]/,/\[/s/move_associated_files =.*/move_associated_files = 1/' ${sb_config}
-	sed -i '/\[General\]/,/\[/s/keep_processed_dir =.*/keep_processed_dir = 0/' ${sb_config}
-	sed -i '/\[General\]/,/\[/s/nzb_method =.*/nzb_method = sabnzbd/' ${sb_config}
-	sed -i '/\[SABnzbd\]/,/\[/s/sab_host =.*/host = ${ip}:${sab_port}/' ${sb_config}
-	sed -i '/\[SABnzbd\]/,/\[/s/sab_apikey =.*/apikey = ${sab_api_key}/' ${sb_config}
-	sed -i '/\[SABnzbd\]/,/\[/s/sab_category =.*/category = tv/' ${sb_config}
+	sed -i "/\[General\]/,/\[/s/move_associated_files =.*/move_associated_files = 1/" ${sb_config}
+	sed -i "/\[General\]/,/\[/s/keep_processed_dir =.*/keep_processed_dir = 0/" ${sb_config}
+	sed -i "/\[General\]/,/\[/s/nzb_method =.*/nzb_method = sabnzbd/" ${sb_config}
+	sed -i "/\[SABnzbd\]/,/\[/s/host =.*/host = ${ip}:${sab_port}/" ${sb_config}
+	sed -i "/\[SABnzbd\]/,/\[/s/apikey =.*/apikey = ${sab_api_key}/" ${sb_config}
+	sed -i "/\[SABnzbd\]/,/\[/s/category =.*/category = tv/" ${sb_config}
 
-	echo "Setting NZBMatrix integration preferences"
-	sed -i '/\[NZBMatrix\]/,/\[/s/nzbmatrix =.*/nzbmatrix = 1/' ${sb_config}
-	sed -i '/\[NZBMatrix\]/,/\[/s/nzbmatrix_username =.*/nzbmatrix_username = ${nzbmatrix_username}/' ${sb_config}
-	sed -i '/\[NZBMatrix\]/,/\[/s/nzbmatrix_apikey =.*/nzbmatrix_apikey = ${nzbmatrix_api}/' ${sb_config}
+	if [ ${nzbmatrix_enable} -eq 1 ]; then
+		echo "Setting NZBMatrix integration preferences"
+		sed -i "/\[NZBMatrix\]/,/\[/s/nzbmatrix =.*/nzbmatrix = 1/" ${sb_config}
+		sed -i "/\[NZBMatrix\]/,/\[/s/nzbmatrix_username =.*/nzbmatrix_username = ${nzbmatrix_username}/" ${sb_config}
+		sed -i "/\[NZBMatrix\]/,/\[/s/nzbmatrix_apikey =.*/nzbmatrix_apikey = ${nzbmatrix_api}/" ${sb_config}
+	fi
 
-	echo "Setting XBMC integration preferences"
-	sed -i '/\[General\]/,/\[/s/use_banner =.*/use_banner = 1/' ${sb_config}
-	sed -i '/\[General\]/,/\[/s/metadata_xbmc =.*/metadata_xbmc = 1\|1\|1\|1\|1\|1/' ${sb_config}
+	if [ ${nzbmatrix_enable} -eq 1 ]; then
+		echo "Setting XBMC integration preferences"
+		sed -i "/\[General\]/,/\[/s/use_banner =.*/use_banner = 1/" ${sb_config}
+		sed -i "/\[General\]/,/\[/s/metadata_xbmc =.*/metadata_xbmc = 1\|1\|1\|1\|1\|1/" ${sb_config}
 
+		sed -i "/\[XBMC\]/,/\[/s/use_xbmc =.*/use_xbmc = 1/" ${sb_config}
+		sed -i "/\[XBMC\]/,/\[/s/xbmc_host =.*/xbmc_host = ${xbmc_host}/" ${sb_config}
+		sed -i "/\[XBMC\]/,/\[/s/xbmc_username =.*/xbmc_username = ${xbmc_username}/" ${sb_config}
+		sed -i "/\[XBMC\]/,/\[/s/xbmc_password =.*/xbmc_password = ${xbmc_password}/" ${sb_config}
+		sed -i "/\[XBMC\]/,/\[/s/xbmc_notify_ondownload =.*/xbmc_notify_ondownload = 1/" ${sb_config}
+	fi
+
+	/etc/init.d/sickbeard start
 }

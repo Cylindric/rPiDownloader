@@ -20,8 +20,8 @@ do_couchpotato_install() {
 #!/bin/sh
 ### BEGIN INIT INFO
 # Provides:          CouchPotato
-# Required-Start:    $network $remote_fs $syslog
-# Required-Stop:     $network $remote_fs $syslog
+# Required-Start:    \$network \$remote_fs \$syslog
+# Required-Stop:     \$network \$remote_fs \$syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Start CouchPotato at boot time
@@ -46,6 +46,7 @@ case "\$1" in
 	*)
 		echo "Usage: \$0 {start|stop}"
 		exit 1
+	;;
 esac
 EOF
 
@@ -54,7 +55,7 @@ EOF
 	
 	# start and stop once to create required config files
 	/etc/init.d/couchpotato start
-	sleep 15
+	sleep 30
 	/etc/init.d/couchpotato stop
 }
 
@@ -72,10 +73,12 @@ do_couchpotato_setup() {
 	SetConfig $couch_config 'core' 'username' "${web_username}"
 	SetConfig $couch_config 'core' 'password' "${md5pass}"
 	SetConfig $couch_config 'core' 'show_wizard' '0'
+	SetConfig $couch_config 'core' 'permission_folder' '0775'
+	SetConfig $couch_config 'core' 'permission_file' '0775'
 
 	echo "Setting download preferences"
 	SetConfig $couch_config 'renamer' 'enabled' '1'
-	SetConfig $couch_config 'renamer' 'from' "${sab_complete_dir}"
+	SetConfig $couch_config 'renamer' 'from' "${sab_complete_dir_films}"
 	SetConfig $couch_config 'renamer' 'to' "${film_root}"
 	SetConfig $couch_config 'renamer' 'cleanup' '1'
 
@@ -98,5 +101,8 @@ do_couchpotato_setup() {
 		SetConfig $couch_config 'xbmc' 'enabled' '1'
 		SetConfig $couch_config 'xbmc' 'username' "$xbmc_username"
 		SetConfig $couch_config 'xbmc' 'password' "$xbmc_password"
+		SetConfig $couch_config 'xbmc' 'host' "$xbmc_host"
 	fi
+
+	/etc/init.d/couchpotato start
 }

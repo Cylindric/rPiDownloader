@@ -15,7 +15,9 @@ do_headphones_install() {
 	git clone git://github.com/rembo10/headphones.git
 	mv headphones ${headphones_installpath}
 	chown -R ${headphones_username}:${usergroup} ${headphones_installpath}
+	chmod u+x ${headphones_installpath}/Headphones.py
 	mkdir -p ${headphones_datapath}
+	cp `dirname "$0"`/headphones.ini /var/headphones/
 	chown ${headphones_username}:${usergroup} ${headphones_datapath}
 
 	echo "Creating Headphones init script"
@@ -23,8 +25,8 @@ do_headphones_install() {
 #!/bin/sh
 ### BEGIN INIT INFO
 # Provides:          Headphones
-# Required-Start:    $network $remote_fs $syslog
-# Required-Stop:     $network $remote_fs $syslog
+# Required-Start:    \$network \$remote_fs \$syslog
+# Required-Stop:     \$network \$remote_fs \$syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Start Headphones at boot time
@@ -34,46 +36,26 @@ do_headphones_install() {
 case "\$1" in
 	start)
 		echo "Starting Headphones"
-		start-stop-daemon \
-			-d ${headphones_installpath} \
-			-c ${headphones_username} \
-			--start \
-			--background \
-			--pidfile /var/run/headphones.pid  \
-			--make-pidfile \
-			--exec /usr/bin/python \
-			-- Headphones.py -q --config ${headphones_config} --datadir ${headphones_datapath}
+		/usr/bin/sudo -u ${headphones_username} -H ${headphones_installpath}/Headphones.py -d --config ${headphones_config}
 	;;
 	stop)
 		echo "Stopping Headphones."
-		start-stop-daemon --stop --pidfile /var/run/headphones.pid
-	;;
-	restart)
-		echo "Restarting Headphones"
-		start-stop-daemon --stop --pidfile /var/run/headphones.pid
-		sleep 15
-		start-stop-daemon \
-			-d ${headphones_installpath} \
-			-c ${headphones_username} \
-			--start \
-			--background \
-			--pidfile /var/run/headphones.pid  \
-			--make-pidfile \
-			--exec /usr/bin/python \
-			-- Headphones.py -q --config ${headphones_config} --datadir ${headphones_datapath}
+		p=\`ps aux | grep -v grep | grep Headphones.py | tr -s \ | cut -d ' ' -f 2\`
+		if [ -n "\$p" ]; then
+			headphones_api_key=\`grep -m 1 api_key ${headphones_config} | cut -d ' ' -f 3\`;
+			headphones_port=\`grep -m 1 port ${headphones_config} | cut -d ' ' -f 3\`;
+			wget -q --delete-after http://localhost:\${headphones_port}/api/\${headphones_api_key}/app.shutdown
+			while ps -p \$p > /dev/null; do sleep 1; done
+		fi
 	;;
 	*)
-		echo "Usage: \$0 {start|stop|restart}"
+		echo "Usage: \$0 {start|stop}"
 		exit 1
+	;;
 	esac
 EOF
 	chmod 755 /etc/init.d/headphones
 	update-rc.d headphones defaults
-
-	echo "Starting and stopping once to create required config files"
-	/etc/init.d/headphones start
-	sleep 15
-	/etc/init.d/headphones stop
 }
 
 
@@ -88,6 +70,7 @@ do_headphones_setup() {
 	SetConfig $headphones_config 'General' 'http_port' ${headphones_port}
 	SetConfig $headphones_config 'General' 'http_username' "${web_username}"
 	SetConfig $headphones_config 'General' 'http_password' "${web_password}"
+	SetConfig $headphones_config 'General' 'log_dir' "${headphones_datapath}/logs"
 
 	echo "Adding API configuration"
 	headphones_api_key=`< /dev/urandom tr -dc a-z0-9 | head -c\${1:-32};echo;`
@@ -100,10 +83,31 @@ do_headphones_setup() {
 	SetConfig $headphones_config 'SABnzbd' 'sab_apikey' "${sab_api_key}"
 	SetConfig $headphones_config 'SABnzbd' 'sab_category' 'music'
 
+	SetConfig $headphones_config 'General' 'download_dir' "${sab_complete_dir_music}"
+	SetConfig $headphones_config 'General' 'destination_dir' "${music_root}"
+	SetConfig $headphones_config 'General' 'music_dir' "${music_root}"
+	SetConfig $headphones_config 'General' 'move_files' 1
+	SetConfig $headphones_config 'General' 'rename_files' 1
+	SetConfig $headphones_config 'General' 'cleanup_files' 1
+	SetConfig $headphones_config 'General' 'add_album_art' 1
+
 	if [ ${nzbmatrix_enable} -eq 1 ]; then
 		echo "Setting nzbmatrix preferences"
-		SetConfig $headphones_config 'nzbmatrix' 'nzbmatrix' '1'
-		SetConfig $headphones_config 'nzbmatrix' 'nzbmatrix_username' "${nzbmatrix_username}"
-		SetConfig $headphones_config 'nzbmatrix' 'nzbmatrix_apikey' "${nzbmatrix_api}"
+		SetConfig $headphones_config 'NZBMatrix' 'nzbmatrix' '1'
+		SetConfig $headphones_config 'NZBMatrix' 'nzbmatrix_username' "${nzbmatrix_username}"
+		SetConfig $headphones_config 'NZBMatrix' 'nzbmatrix_apikey' "${nzbmatrix_api}"
 	fi
+
+	if [ $xbmc_enable -eq 1 ]; then
+		echo "Setting xbmc preferences"
+		SetConfig $headphones_config 'XBMC' 'xbmc_enabled' 1
+		SetConfig $headphones_config 'XBMC' 'xbmc_host' "${xbmc_host}:${xbmc_port}"
+		SetConfig $headphones_config 'XBMC' 'xbmc_username' = "${xbmc_username}"
+		SetConfig $headphones_config 'XBMC' 'xbmc_password' = "${xbmc_password}"
+		SetConfig $headphones_config 'XBMC' 'xbmc_update' 1
+		SetConfig $headphones_config 'XBMC' 'xbmc_notify'1
+	fi
+
+	/etc/init.d/headphones start
+
 }

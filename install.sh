@@ -79,21 +79,42 @@ SetConfig() {
 do_pre_install() {
 	# Remove unwanted packages (Do this first - space is limited!)
 	if [ $purge_x -eq 1 ]; then
-		echo "Removing unwanted packages"
-		apt-get -qqy purge scratch xserver-common lxde-common lxinput lxappearance lxpanel lxpolkit lxrandr lxsession-edit lxshortcut lxtask lxterminal gnome-icon-theme gnome-themes-standard
+		echo "Removing unwanted packages..."
+		apt-get -y purge \
+			gnome-icon-theme \
+			gnome-themes-standard \
+			lxappearance \
+			lxde-common \
+			lxinput \
+			lxpanel \
+			lxpolkit \
+			lxrandr \
+			lxsession-edit \
+			lxshortcut \
+			lxtask \
+			lxterminal \
+			scratch \
+			xserver-common \
+			> /dev/null
+
 		rm -r /usr/lib/xorg/modules/linux /usr/lib/xorg/modules/extensions /usr/lib/xorg/modules /usr/lib/xorg
 		apt-get -qqy autoremove
 		apt-get -qqy autoclean
 	fi
 
 	# Install Packages
+	echo "Installing required core packages..."
 	echo "deb-src http://mirrordirector.raspbian.org/raspbian/ wheezy main contrib non-free rpi" >> /etc/apt/sources.list
-	apt-get -q update
-	apt-get -qqy install python2.6 python-cheetah python-openssl par2
-	apt-get -qqy build-dep unrar-nonfree
+	apt-get -q update > /dev/null
+	apt-get -qqy install python2.6 python-cheetah python-openssl par2 > /dev/null
+	apt-get -qqy build-dep unrar-nonfree > /dev/null
+
+	echo "Building unrar..."
 	apt-get -qqy source -b unrar-nonfree
-	dpkg -i unrar*.deb
-	rm -rf unrar*
+
+	echo "Installing unrar..."
+	dpkg -i unrar*.deb > /dev/null
+	rm -rf unrar* > /dev/null
 
 	apt-get -qqy clean
 

@@ -8,7 +8,7 @@ pi_password={PASSWORD}
 web_username={USERNAME}
 web_password={PASSWORD}
 
-expand_rootfs=1
+expand_rootfs=0
 do_os_update=1
 do_firmware_update=1
 purge_x=1
@@ -19,14 +19,18 @@ usergroup=nzb
 media_root=/var/multimedia
 film_root=/var/multimedia/films
 tv_root=/var/multimedia/tv
+music_root=/var/multimedia/music
 
-sab_port=8080
 sab_username=sabnzbd
+sab_port=8080
 sab_installpath=/usr/local/sabnzbd
 sab_datapath=/var/sabnzbd
 sab_config=/var/sabnzbd/sabnzbd.ini
 sab_download_dir=/var/multimedia/incoming/sabnzbd/incomplete
 sab_complete_dir=/var/multimedia/incoming/sabnzbd/complete
+sab_complete_dir_films=/var/multimedia/incoming/sabnzbd/complete_films
+sab_complete_dir_tv=/var/multimedia/incoming/sabnzbd/complete_tv
+sab_complete_dir_music=/var/multimedia/incoming/sabnzbd/complete_music
 sab_script_dir=/usr/local/sickbeard/autoProcessTV
 
 sb_port=8081
@@ -41,18 +45,25 @@ couch_installpath=/usr/local/couchpotato
 couch_datapath=/var/couchpotato
 couch_config=/var/couchpotato/couchpotato.ini
 
-nzbmatrix_enable=1
+headphones_port=8083
+headphones_username=headphones
+headphones_installpath=/usr/local/headphones
+headphones_datapath=/var/headphones
+headphones_config=/var/headphones/headphones.ini
+
+nzbmatrix_enable=0
 nzbmatrix_username=
 nzbmatrix_api=
 
-nntp_server={SERVER_ADDRESS}
+nntp_enable=0
+nntp_server=
 nntp_username=
 nntp_password=
 nntp_connections=50
 nntp_port=563
 nntp_ssl=1
 
-xbmc_enable=1
+xbmc_enable=0
 xbmc_host=
 xmbc_username=
 xbmc_password=
