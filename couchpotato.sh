@@ -31,6 +31,7 @@ do_couchpotato_install() {
 case "\$1" in
 	start)
 		echo "Starting CouchPotato."
+		mount -a
 		sudo -u ${couch_username} -H ${couch_installpath}/CouchPotato.py --daemon --data_dir ${couch_datapath} --config_file ${couch_config}
 	;;
 	stop)
@@ -70,13 +71,15 @@ do_couchpotato_setup() {
 	echo "Setting web ui preferences"
 	md5pass=`echo -n "${web_password}" | md5sum - | cut -f1 -d" "`
 	SetConfig $couch_config 'core' 'port' ${couch_port}
-	SetConfig $couch_config 'core' 'username' "${web_username}"
-	SetConfig $couch_config 'core' 'password' "${md5pass}"
+	if [ $web_protect -eq 1 ]; then
+		SetConfig $couch_config 'core' 'username' "${web_username}"
+		SetConfig $couch_config 'core' 'password' "${md5pass}"
+	fi
 	SetConfig $couch_config 'core' 'show_wizard' '0'
 	SetConfig $couch_config 'core' 'permission_folder' '0775'
 	SetConfig $couch_config 'core' 'permission_file' '0775'
 
-	echo "Setting download preferences"
+	echo "Setting download preferences"	
 	SetConfig $couch_config 'renamer' 'enabled' '1'
 	SetConfig $couch_config 'renamer' 'from' "${sab_complete_dir_films}"
 	SetConfig $couch_config 'renamer' 'to' "${film_root}"

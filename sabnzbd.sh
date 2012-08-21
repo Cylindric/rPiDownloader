@@ -41,6 +41,7 @@ do_sabnzbd_install() {
 case "\$1" in
 	start)
 		echo "Starting SABnzbd"
+		mount -a
 		/usr/bin/sudo -u ${sab_username} -H ${sab_installpath}/SABnzbd.py -d -f ${sab_config}
 	;;
 	stop)
@@ -123,27 +124,31 @@ EOF
 
 	# get the API key for SABnzbd
 	get_sabnzbd_apikey
-	echo Found SABnzbd API key ${sab_api_key}
+	echo "Found SABnzbd API key ${sab_api_key}"
 
 	wgetopts="-q --delete-after --retry-connrefused --wait=1 --tries=10"
 
-	echo Disabling auto browser
+	echo "Disabling auto browser"
 	wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=set_config\&section=misc\&keyword=auto_browser\&value=0\&apikey=${sab_api_key}
 
-	echo Setting download_dir, complete_dir and script_dir
+	echo "Setting download_dir, complete_dir and script_dir"
 	wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=set_config\&section=misc\&keyword=download_dir\&value=${sab_download_dir}\&apikey=${sab_api_key}
 	wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=set_config\&section=misc\&keyword=complete_dir\&value=${sab_complete_dir}\&apikey=${sab_api_key}
 	wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=set_config\&section=misc\&keyword=script_dir\&value=${sab_script_dir}\&apikey=${sab_api_key}
 	wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=set_config\&section=misc\&keyword=permissions\&value=777\&apikey=${sab_api_key}
+	wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=set_config\&section=misc\&keyword=download_free\&value=1G\&apikey=${sab_api_key}
 
-	if [ "${web_username}" != "{USERNAME}" ]; then
-		echo Setting web UI username and password
+	# Enable for less memory usage. Disable to prevent slow jobs from blocking the queue.
+	wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=set_config\&section=misc\&keyword=top_only\&value=1\&apikey=${sab_api_key}
+
+	if [ $web_protect -eq 1 ]; then
+		echo "Setting web UI username and password"
 		wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=set_config\&section=misc\&keyword=username\&value=${web_username}\&apikey=${sab_api_key}
 		wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=set_config\&section=misc\&keyword=password\&value=${web_password}\&apikey=${sab_api_key}
 	fi
 
 	if [ ${nzbmatrix_enable} -eq 1 ]; then
-		echo Setting NZBMatrix username and password
+		echo "Setting NZBMatrix username and password"
 		wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=set_config\&section=nzbmatrix\&keyword=username\&value=${nzbmatrix_username}\&apikey=${sab_api_key}
 		wget ${wgetopts} http://${ip}:${sab_port}/api\?mode=set_config\&section=nzbmatrix\&keyword=apikey\&value=${nzbmatrix_api}\&apikey=${sab_api_key}
 	fi

@@ -36,6 +36,7 @@ do_headphones_install() {
 case "\$1" in
 	start)
 		echo "Starting Headphones"
+		mount -a
 		/usr/bin/sudo -u ${headphones_username} -H ${headphones_installpath}/Headphones.py -d --config ${headphones_config}
 	;;
 	stop)
@@ -63,18 +64,27 @@ EOF
 do_headphones_setup() {
 	echo "Configuring Headphones"
 
+	if [ $headphones_clobber_useragent -eq 1 ]; then
+		echo "Chaning User-Agent string"
+		useragent="python-rPiDownloader/$version ($contact)"
+		useragent=`echo "${useragent}" | sed -e 's/[\\/&]/\\\\&/g'`
+		sed -i "s/_useragent = \".*/_useragent = \"$useragent\"/g"  ${headphones_installpath}/lib/musicbrainzngs/musicbrainz.py
+	fi
+
 	echo "Disabling auto-browser launch"
 	SetConfig $headphones_config 'General' 'launch_browser' 0
 
 	echo "Setting web ui preferences"
 	SetConfig $headphones_config 'General' 'http_port' ${headphones_port}
-	SetConfig $headphones_config 'General' 'http_username' "${web_username}"
-	SetConfig $headphones_config 'General' 'http_password' "${web_password}"
+	if [ $web_protect -eq 1 ]; then
+		SetConfig $headphones_config 'General' 'http_username' "${web_username}"
+		SetConfig $headphones_config 'General' 'http_password' "${web_password}"
+	fi
 	SetConfig $headphones_config 'General' 'log_dir' "${headphones_datapath}/logs"
 
 	echo "Adding API configuration"
 	headphones_api_key=`< /dev/urandom tr -dc a-z0-9 | head -c\${1:-32};echo;`
-	SetConfig $headphones_config 'General' 'api_enabled' 1
+	SetConfig $headphones_config 'General' 'api_enabled' '1'
 	SetConfig $headphones_config 'General' 'api_key' "${headphones_api_key}"
 
 	get_sabnzbd_apikey
@@ -86,10 +96,11 @@ do_headphones_setup() {
 	SetConfig $headphones_config 'General' 'download_dir' "${sab_complete_dir_music}"
 	SetConfig $headphones_config 'General' 'destination_dir' "${music_root}"
 	SetConfig $headphones_config 'General' 'music_dir' "${music_root}"
-	SetConfig $headphones_config 'General' 'move_files' 1
-	SetConfig $headphones_config 'General' 'rename_files' 1
-	SetConfig $headphones_config 'General' 'cleanup_files' 1
-	SetConfig $headphones_config 'General' 'add_album_art' 1
+	SetConfig $headphones_config 'General' 'move_files' '1'
+	SetConfig $headphones_config 'General' 'rename_files' '1'
+	SetConfig $headphones_config 'General' 'cleanup_files' '1'
+	SetConfig $headphones_config 'General' 'add_album_art' '1'
+	SetConfig $headphones_config 'General' 'lossless_destination_dir' '""'
 
 	if [ ${nzbmatrix_enable} -eq 1 ]; then
 		echo "Setting nzbmatrix preferences"
@@ -100,12 +111,12 @@ do_headphones_setup() {
 
 	if [ $xbmc_enable -eq 1 ]; then
 		echo "Setting xbmc preferences"
-		SetConfig $headphones_config 'XBMC' 'xbmc_enabled' 1
-		SetConfig $headphones_config 'XBMC' 'xbmc_host' "${xbmc_host}:${xbmc_port}"
+		SetConfig $headphones_config 'XBMC' 'xbmc_enabled' '1'
+		SetConfig $headphones_config 'XBMC' 'xbmc_host' "http://${xbmc_host}:${xbmc_port}"
 		SetConfig $headphones_config 'XBMC' 'xbmc_username' = "${xbmc_username}"
 		SetConfig $headphones_config 'XBMC' 'xbmc_password' = "${xbmc_password}"
-		SetConfig $headphones_config 'XBMC' 'xbmc_update' 1
-		SetConfig $headphones_config 'XBMC' 'xbmc_notify'1
+		SetConfig $headphones_config 'XBMC' 'xbmc_update' '1'
+		SetConfig $headphones_config 'XBMC' 'xbmc_notify' '1'
 	fi
 
 	/etc/init.d/headphones start

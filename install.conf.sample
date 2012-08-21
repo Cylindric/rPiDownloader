@@ -5,14 +5,18 @@ pi_password={PASSWORD}
 
 
 # Set the username and password that will be used by the web interfaces
-web_username={USERNAME}
-web_password={PASSWORD}
+web_protect=1
+web_username=
+web_password=
+
 
 expand_rootfs=0
 do_os_update=1
 do_firmware_update=1
 purge_x=1
 additional_packages=
+maximize_arm_ram=1
+daily_reboot=1
 
 usergroup=nzb
 
@@ -50,16 +54,19 @@ headphones_username=headphones
 headphones_installpath=/usr/local/headphones
 headphones_datapath=/var/headphones
 headphones_config=/var/headphones/headphones.ini
+headphones_clobber_useragent=0
 
 nzbmatrix_enable=0
 nzbmatrix_username=
 nzbmatrix_api=
 
+# Remember that the rPi is a low-spec device, so don't just put the max 
+# connections allowed by your news server. Start with 4 and see how things go
 nntp_enable=0
 nntp_server=
 nntp_username=
 nntp_password=
-nntp_connections=50
+nntp_connections=4
 nntp_port=563
 nntp_ssl=1
 

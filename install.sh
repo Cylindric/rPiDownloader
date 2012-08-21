@@ -11,6 +11,9 @@
 ip=`ifconfig eth0 | grep "inet addr" | awk -F: '{print \$2}' | awk '{print \$1}'`;
 sab_api_key=unknown
 
+version='0.1'
+url='https://github.com/Cylindric/rPiDownloader'
+
 
 start_stage=2
 end_stage=99
@@ -106,7 +109,7 @@ do_pre_install() {
 	echo "Installing required core packages..."
 	echo "deb-src http://mirrordirector.raspbian.org/raspbian/ wheezy main contrib non-free rpi" >> /etc/apt/sources.list
 	apt-get -q update > /dev/null
-	apt-get -qqy install python2.6 python-cheetah python-openssl par2 > /dev/null
+	apt-get -qqy install python2.6 python-cheetah python-openssl par2 autofs > /dev/null
 	apt-get -qqy build-dep unrar-nonfree > /dev/null
 
 	echo "Building unrar..."

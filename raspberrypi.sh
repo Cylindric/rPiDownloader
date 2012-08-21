@@ -69,6 +69,12 @@ do_rpi_setup() {
 	# prevent booting to desktop
 	update-rc.d lightdm disable 2
 
+	if [ $maximize_arm_ram -eq 1 ]; then
+		echo "Giving max RAM to the ARM core"
+		cp -a /boot/arm240_start.elf /boot/start.elf
+		sync
+	fi
+
 	# update the rPi core
 	apt-get -q update
 	if [ $do_os_update -eq 1 ]; then
@@ -80,5 +86,14 @@ do_rpi_setup() {
 		git clone git://github.com/Hexxeh/rpi-update.git
 		./rpi-update/rpi-update
 		rm -rf ./rpi-update
+	fi
+	apt-get -qqy autoremove
+	apt-get -qqy autoclean
+
+	if [ $daily_reboot -eq 1 ]; then
+		echo "Setting daily reboot"
+		echo "#!/bin/sh" > /etc/cron.daily/reboot
+		echo "reboot" >> /etc/cron.daily/reboot
+		chmod 755 /etc/cron.daily/reboot
 	fi
 }
