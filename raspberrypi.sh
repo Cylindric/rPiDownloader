@@ -71,7 +71,8 @@ do_rpi_setup() {
 
 	if [ $maximize_arm_ram -eq 1 ]; then
 		echo "Giving max RAM to the ARM core"
-		cp -a /boot/arm240_start.elf /boot/start.elf
+		#cp -a /boot/arm240_start.elf /boot/start.elf
+		cp -a /boot/arm224_start.elf /boot/start.elf
 		sync
 	fi
 
@@ -83,7 +84,7 @@ do_rpi_setup() {
 	if [ $do_firmware_update -eq 1 ]; then
 		echo "Intalling Git, downloading rpi-update and updating"
 		apt-get -qqy install git
-		git clone git://github.com/Hexxeh/rpi-update.git
+		git clone https://github.com/Hexxeh/rpi-update.git
 		./rpi-update/rpi-update
 		rm -rf ./rpi-update
 	fi

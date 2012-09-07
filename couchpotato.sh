@@ -10,7 +10,7 @@ do_couchpotato_install() {
 	#### Couch Potato Install ####
     ##############################
 	useradd --system --user-group --no-create-home --groups ${usergroup} ${couch_username}
-	git clone git://github.com/RuudBurger/CouchPotatoServer.git
+	git clone https://github.com/RuudBurger/CouchPotatoServer.git
 	mv CouchPotatoServer ${couch_installpath}
 	chown -R ${couch_username}:${usergroup} ${couch_installpath}
 	mkdir -p ${couch_datapath}

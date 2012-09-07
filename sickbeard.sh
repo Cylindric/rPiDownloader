@@ -10,7 +10,7 @@ do_sickbeard_install() {
 	#### Sick Beard Install ####
     ############################
 	useradd --system --user-group --no-create-home --groups ${usergroup} ${sb_username}
-	git clone git://github.com/midgetspy/Sick-Beard.git
+	git clone https://github.com/midgetspy/Sick-Beard.git
 	mv Sick-Beard ${sb_installpath}
 	chown -R ${sb_username}:${usergroup} ${sb_installpath}
 	chmod ug+rw ${sb_installpath}/autoProcessTV/

@@ -12,7 +12,7 @@ do_headphones_install() {
 	useradd --system --user-group --no-create-home --groups ${usergroup} ${headphones_username}
 
 	echo "Downloading Headphones"
-	git clone git://github.com/rembo10/headphones.git
+	git clone https://github.com/rembo10/headphones.git
 	mv headphones ${headphones_installpath}
 	chown -R ${headphones_username}:${usergroup} ${headphones_installpath}
 	chmod u+x ${headphones_installpath}/Headphones.py
